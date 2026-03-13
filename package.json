@@ -1,0 +1,9 @@
+{
+  "name": "hangifirma",
+  "version": "1.0.0",
+  "description": "Ziyaretçi firma tespit paneli",
+  "private": true,
+  "dependencies": {
+    "@vercel/kv": "^1.0.0"
+  }
+}

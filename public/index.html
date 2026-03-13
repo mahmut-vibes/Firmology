@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Firmology — Visitor Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --surface2: #edeae3;
+      --border: #ddd9d0;
+      --ink: #1a1814;
+      --ink2: #6b6660;
+      --accent: #e8430a;
+      --accent2: #1a56db;
+      --green: #0a7c4e;
+      --mono: 'Fira Code', monospace;
+      --sans: 'Cabinet Grotesk', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    /* ─── LOGIN ─── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .login-grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .login-box {
+      width: 400px;
+      background: var(--surface);
+      border: 1.5px solid var(--ink);
+      padding: 52px 44px;
+      position: relative;
+      box-shadow: 6px 6px 0px var(--ink);
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .login-wordmark {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+      line-height: 1;
+    }
+
+    .login-wordmark .dot { color: var(--accent); }
+
+    .login-tagline {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink2);
+      margin-bottom: 36px;
+      letter-spacing: 0.3px;
+    }
+
+    .lang-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .lang-btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      background: none;
+      cursor: pointer;
+      color: var(--ink2);
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+    }
+
+    .lang-btn.active {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink2);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 14px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus { border-color: var(--ink); }
+
+    .btn-login {
+      width: 100%;
+      background: var(--ink);
+      color: var(--bg);
+      border: 1.5px solid var(--ink);
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      padding: 14px;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: all 0.15s;
+    }
+
+    .btn-login:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .login-error {
+      color: var(--accent);
+      font-size: 12px;
+      font-family: var(--mono);
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* ─── DASHBOARD ─── */
+    #dashboard { display: none; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1.5px solid var(--ink);
+      padding: 0 36px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .wordmark {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+
+    .wordmark .dot { color: var(--accent); }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--green);
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .header-lang { display: flex; gap: 3px; }
+
+    .btn-logout {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--ink2);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .main { padding: 36px; max-width: 1280px; margin: 0 auto; }
+
+    /* ─── STATS ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1.5px solid var(--ink);
+      padding: 24px 24px 20px;
+      position: relative;
+      box-shadow: 3px 3px 0 var(--border);
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.10s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.20s; }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink2);
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -2px;
+      color: var(--ink);
+    }
+
+    .stat-card:first-child .stat-value { color: var(--accent); }
+
+    /* ─── TABLE ─── */
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .table-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .table-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .search-input {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 9px 14px;
+      outline: none;
+      width: 240px;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus { border-color: var(--ink); }
+    .search-input::placeholder { color: var(--ink2); }
+
+    .btn-export {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-export:hover {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+
+    .table-wrap {
+      border: 1.5px solid var(--ink);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: 4px 4px 0 var(--border);
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead tr {
+      background: var(--ink);
+    }
+
+    th {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--bg);
+      padding: 14px 20px;
+      text-align: left;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+
+    td {
+      padding: 15px 20px;
+      font-size: 13px;
+    }
+
+    .td-firma {
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .td-ip {
+      font-family: var(--mono);
+      color: var(--ink2);
+      font-size: 11px;
+    }
+
+    .td-sehir { color: var(--ink); }
+
+    .td-sektor {
+      display: inline-block;
+      background: var(--surface2);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 10px;
+      letter-spacing: 0.5px;
+      border: 1px solid var(--border);
+    }
+
+    .td-zaman {
+      font-family: var(--mono);
+      color: var(--ink2);
+      font-size: 11px;
+    }
+
+    .td-sayfa {
+      font-family: var(--mono);
+      color: var(--accent2);
+      font-size: 11px;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      color: var(--ink2);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .loading-row td {
+      text-align: center;
+      padding: 48px;
+      color: var(--ink2);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .main { padding: 16px; }
+      header { padding: 0 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .search-input { width: 100%; }
+      th:nth-child(4), td:nth-child(4),
+      th:nth-child(6), td:nth-child(6) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-grid-bg"></div>
+  <div class="login-box">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('tr')">TR</button>
+    </div>
+    <div class="login-wordmark">Firmology<span class="dot">.</span></div>
+    <div class="login-tagline" data-en="// visitor intelligence platform" data-tr="// ziyaretçi tespit paneli">// visitor intelligence platform</div>
+    <div class="field">
+      <label data-en="Username" data-tr="Kullanıcı Adı">Username</label>
+      <input type="text" id="username" placeholder="admin" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label data-en="Password" data-tr="Şifre">Password</label>
+      <input type="password" id="password" placeholder="••••••••" />
+    </div>
+    <button class="btn-login" onclick="doLogin()" data-en="Sign In" data-tr="Giriş Yap">Sign In</button>
+    <div class="login-error" id="login-error" data-en="Invalid username or password." data-tr="Hatalı kullanıcı adı veya şifre.">Invalid username or password.</div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard">
+  <header>
+    <div class="wordmark">Firmology<span class="dot">.</span></div>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <span data-en="LIVE" data-tr="CANLI">LIVE</span>
+      </div>
+      <div class="header-lang">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('tr')">TR</button>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" data-en="Sign Out" data-tr="Çıkış">Sign Out</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label" data-en="Total Visits" data-tr="Toplam Ziyaret">Total Visits</div>
+        <div class="stat-value" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" data-en="Unique Companies" data-tr="Tekil Firma">Unique Companies</div>
+        <div class="stat-value" id="stat-unique">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" data-en="Today" data-tr="Bugün">Today</div>
+        <div class="stat-value" id="stat-today">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" data-en="This Month" data-tr="Bu Ay">This Month</div>
+        <div class="stat-value" id="stat-month">—</div>
+      </div>
+    </div>
+
+    <div class="table-header">
+      <div class="table-title" data-en="Visitor Log" data-tr="Ziyaretçi Kayıtları">Visitor Log</div>
+      <div class="table-controls">
+        <input class="search-input" type="text" id="search" placeholder="Search company..." oninput="filterTable()" />
+        <button class="btn-export" onclick="exportCSV()" data-en="Export CSV" data-tr="CSV İndir">Export CSV</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-en="Company" data-tr="Firma">Company</th>
+            <th data-en="IP Address" data-tr="IP Adresi">IP Address</th>
+            <th data-en="City" data-tr="Şehir">City</th>
+            <th data-en="Industry" data-tr="Sektör">Industry</th>
+            <th data-en="Time" data-tr="Ziyaret Zamanı">Time</th>
+            <th data-en="Page" data-tr="Sayfa">Page</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr class="loading-row"><td colspan="6" data-en="Loading..." data-tr="Yükleniyor...">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIG ───
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = 'firmology2024'; // Bunu değiştir! / Change this!
+
+  // ─── LANGUAGE ───
+  let lang = localStorage.getItem('flang') || 'en';
+
+  function setLang(l) {
+    lang = l;
+    localStorage.setItem('flang', l);
+    document.querySelectorAll('[data-en]').forEach(el => {
+      if (el.tagName === 'INPUT') {
+        el.placeholder = l === 'tr' ? (el.dataset.tr || el.dataset.en) : el.dataset.en;
+      } else {
+        el.textContent = l === 'tr' ? (el.dataset.tr || el.dataset.en) : el.dataset.en;
+      }
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent === l.toUpperCase());
+    });
+    // Update search placeholder
+    const s = document.getElementById('search');
+    if (s) s.placeholder = l === 'tr' ? 'Firma ara...' : 'Search company...';
+  }
+
+  // Init language on load
+  document.addEventListener('DOMContentLoaded', () => setLang(lang));
+
+  // ─── AUTH ───
+  function doLogin() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      setLang(lang);
+      loadData();
+    } else {
+      const err = document.getElementById('login-error');
+      err.style.display = 'block';
+      err.textContent = lang === 'tr' ? 'Hatalı kullanıcı adı veya şifre.' : 'Invalid username or password.';
+    }
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  function doLogout() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+
+  // ─── DATA ───
+  let allData = [];
+
+  async function loadData() {
+    try {
+      const res = await fetch('/api/visits');
+      const data = await res.json();
+      allData = data.visits || [];
+      renderStats(allData);
+      renderTable(allData);
+    } catch(e) {
+      document.getElementById('table-body').innerHTML =
+        `<tr class="loading-row"><td colspan="6">${lang === 'tr' ? 'Veri yüklenemedi.' : 'Could not load data.'}</td></tr>`;
+    }
+  }
+
+  function renderStats(data) {
+    const todayStr = new Date().toDateString();
+    const nowMonth = new Date().getMonth();
+    const nowYear  = new Date().getFullYear();
+    document.getElementById('stat-total').textContent  = data.length;
+    document.getElementById('stat-unique').textContent = new Set(data.map(d => d.org || d.ip)).size;
+    document.getElementById('stat-today').textContent  = data.filter(d => new Date(d.timestamp).toDateString() === todayStr).length;
+    document.getElementById('stat-month').textContent  = data.filter(d => {
+      const dt = new Date(d.timestamp);
+      return dt.getMonth() === nowMonth && dt.getFullYear() === nowYear;
+    }).length;
+  }
+
+  function renderTable(data) {
+    const tbody = document.getElementById('table-body');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">${lang === 'tr' ? 'Henüz ziyaretçi kaydı yok.' : 'No visitor records yet.'}</div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.slice().reverse().map(d => {
+      const firma  = d.org || d.hostname || '—';
+      const city   = d.city || '—';
+      const sector = d.industry || mapIndustry(d.org) || '—';
+      const time   = formatDate(d.timestamp);
+      const page   = d.path || '/';
+      return `<tr>
+        <td class="td-firma">${esc(firma)}</td>
+        <td class="td-ip">${esc(d.ip || '—')}</td>
+        <td class="td-sehir">${esc(city)}</td>
+        <td><span class="td-sektor">${esc(sector)}</span></td>
+        <td class="td-zaman">${time}</td>
+        <td class="td-sayfa">${esc(page)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function filterTable() {
+    const q = document.getElementById('search').value.toLowerCase();
+    renderTable(allData.filter(d =>
+      (d.org   || '').toLowerCase().includes(q) ||
+      (d.city  || '').toLowerCase().includes(q) ||
+      (d.ip    || '').includes(q)
+    ));
+  }
+
+  function exportCSV() {
+    const headers = lang === 'tr'
+      ? ['Firma','IP','Şehir','Sektör','Zaman','Sayfa']
+      : ['Company','IP','City','Industry','Time','Page'];
+    const rows = allData.map(d => [
+      d.org || '', d.ip || '', d.city || '',
+      d.industry || mapIndustry(d.org) || '',
+      d.timestamp || '', d.path || '/'
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `firmology_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  function formatDate(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return lang === 'tr'
+      ? d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function mapIndustry(org) {
+    if (!org) return null;
+    const o = org.toLowerCase();
+    if (o.includes('telekom') || o.includes('vodafone') || o.includes('turkcell')) return lang === 'tr' ? 'Telekom' : 'Telecom';
+    if (o.includes('bank') || o.includes('finans')) return lang === 'tr' ? 'Finans' : 'Finance';
+    if (o.includes('holding')) return 'Holding';
+    if (o.includes('media') || o.includes('medya')) return lang === 'tr' ? 'Medya' : 'Media';
+    if (o.includes('tech') || o.includes('yazılım')) return lang === 'tr' ? 'Teknoloji' : 'Technology';
+    if (o.includes('university') || o.includes('üniversite')) return lang === 'tr' ? 'Eğitim' : 'Education';
+    return null;
+  }
+
+  // Auto-refresh every 60s
+  setInterval(() => {
+    if (document.getElementById('dashboard').style.display === 'block') loadData();
+  }, 60000);
+</script>
+</body>
+</html>
