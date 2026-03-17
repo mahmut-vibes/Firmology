@@ -25,9 +25,16 @@ export default async function handler(req, res) {
       const ipRes = await fetch(`https://ipinfo.io/${ip}?token=${process.env.IPINFO_TOKEN}`);
       if (ipRes.ok) {
         const ipData = await ipRes.json();
+        const org = cleanOrg(ipData.org);
+
+        // Bot ve veri merkezi filtresi
+        if (isBot(org, ipData.hostname)) {
+          return res.status(200).json({ ok: true, skipped: 'bot' });
+        }
+
         firmaBilgisi = {
           ip,
-          org: cleanOrg(ipData.org),
+          org,
           city: ipData.city,
           region: ipData.region,
           country: ipData.country,
@@ -40,7 +47,6 @@ export default async function handler(req, res) {
 
     const record = JSON.stringify({ ...firmaBilgisi, path, timestamp });
 
-    // Upstash Redis REST API
     const url = process.env.KV_REST_API_URL;
     const token = process.env.KV_REST_API_TOKEN;
 
@@ -59,6 +65,30 @@ export default async function handler(req, res) {
     console.error('Track error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+function isBot(org, hostname) {
+  const botOrgs = [
+    'google', 'googlebot', 'amazon', 'amazonaws', 'microsoft', 'azure',
+    'digitalocean', 'linode', 'vultr', 'ovh', 'hetzner', 'cloudflare',
+    'datacamp', 'fastly', 'akamai', 'cdn77', 'leaseweb', 'choopa',
+    'psychz', 'servers.com', 'datapacket', 'arvid', 'm247',
+    'contabo', 'serverius', 'ipxo', 'zscaler', 'palo alto',
+    'syn ltd', 'neterra', 'combahton', 'frantech', 'quadranet',
+  ];
+
+  const botHostnames = [
+    'googlebot', 'google.com', 'crawl', 'spider', 'bot',
+    'amazonaws.com', 'azure.com', 'msn.com',
+  ];
+
+  const orgLower = (org || '').toLowerCase();
+  const hostLower = (hostname || '').toLowerCase();
+
+  if (botOrgs.some(b => orgLower.includes(b))) return true;
+  if (botHostnames.some(b => hostLower.includes(b))) return true;
+
+  return false;
 }
 
 function cleanOrg(org) {
